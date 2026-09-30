@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32 voice assistant — nillebco labs</title>
+<meta name="description" content="A pocket-sized ESP32-S3 e-ink voice assistant with a self-hosted speech and LLM backend.">
+<link rel="stylesheet" href="assets/labs.css">
+</head>
+<body>
+<main>
+  <p class="back"><a href="./">← nillebco labs</a></p>
+  <p class="eyebrow">Prototype</p>
+  <h1>ESP32 voice assistant</h1>
+  <p class="lead">A small e-ink device you press, talk to, and that answers back. It keeps the hardware simple and does the heavy lifting on a self-hosted server.</p>
+
+  <h2>How it works</h2>
+  <div class="flow">
+    <span>🔘 press &amp; hold</span><span class="arrow">→</span>
+    <span>🎙️ record</span><span class="arrow">→</span>
+    <span>🔐 secure WebSocket</span><span class="arrow">→</span>
+    <span>📝 speech-to-text</span><span class="arrow">→</span>
+    <span>🧠 LLM with tools</span><span class="arrow">→</span>
+    <span>🔊 voice reply</span>
+  </div>
+  <ul class="facts">
+    <li><strong>Device:</strong> Waveshare ESP32-S3 board with an e-ink screen, a microphone and a speaker, powered by a small LiPo battery.</li>
+    <li><strong>Firmware:</strong> ESP-IDF with Arduino as a component. A button wakes it from deep sleep, a real-time clock refreshes the idle screen, and it supports over-the-air updates.</li>
+    <li><strong>Server:</strong> a FastAPI service that runs speech-to-text, an LLM with tools (for example, writing notes into a knowledge base) and text-to-speech, streamed back to the device.</li>
+    <li><strong>Other clients:</strong> an iPhone companion app talks to the same server, and tools can be enabled per client.</li>
+  </ul>
+
+  <h2>Where it stands</h2>
+  <p>The full loop works: talk, transcription, answer and voice reply, on the device and from the iPhone app. The current challenge is power: the device can reset mid-recording on battery, most likely a brownout when the microphone and Wi-Fi draw current at the same time. On-device crash tracing is in place to confirm it.</p>
+
+  <h2>Next</h2>
+  <ul class="facts">
+    <li>Confirm and fix the battery brownout.</li>
+    <li>Finish the e-ink and audio drivers and the deep-sleep state machine.</li>
+    <li>Wire up an Apple Watch push-to-talk client.</li>
+  </ul>
+
+  <footer>nillebco EURL · <a href="./">labs.nilleb.co</a></footer>
+</main>
+</body>
+</html>

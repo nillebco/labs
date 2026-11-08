@@ -9,4 +9,7 @@ nillebco labs — static site on GitHub Pages.
 | ESP32 voice assistant | `esp32-assistant.html` |
 | Pagecast (browser extension) | `pagecast.html` — screenshot in `assets/pagecast-palette.png`, copied from `~/dev/nillebco/pagecast/store/screens/01-palette-1280x800.png` |
 
+Sections on the home page: **Hardware** (3D printing, ESP32 assistant) and **Usability improvements**
+(Pagecast, tessera, the Raycast window switcher). Keep new desktop/browser tooling in the second one.
+
 Shared styles: `assets/labs.css`. Push to `main` to publish. `labs.nilleb.com` redirects here (Cloudflare).

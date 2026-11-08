@@ -52,6 +52,14 @@ a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
 }
 ul.facts { padding-left: 1.2rem; }
 ul.facts li { margin: .3rem 0; }
+figure.shot { margin: 0 0 2rem; }
+figure.shot img { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 12px; }
+figure.shot figcaption { color: var(--muted); font-size: .85rem; margin-top: .5rem; }
+kbd {
+  font-family: inherit; font-size: .85em; background: var(--card);
+  border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; padding: .05em .35em;
+}
+code { font-size: .9em; }
 .flow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0; }
 .flow span { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: .35rem .7rem; font-size: .9rem; }
 .flow .arrow { border: none; background: none; color: var(--muted); padding: 0; }

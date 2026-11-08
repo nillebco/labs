@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagecast — nillebco labs</title>
+<meta name="description" content="Pagecast is a browser extension: press Alt+Period and fuzzy-search every control on the page, your open tabs, and site-specific commands.">
+<link rel="stylesheet" href="assets/labs.css">
+</head>
+<body>
+<main>
+  <p class="back"><a href="./">← nillebco labs</a></p>
+  <p class="eyebrow">Browser extension</p>
+  <h1>Pagecast</h1>
+  <p class="lead">A command palette for the page you are on. Press <kbd>⌥.</kbd> and fuzzy-search every button, link and field, your open tabs, and the commands a site adds of its own.</p>
+
+  <figure class="shot">
+    <img src="assets/pagecast-palette.png" width="1280" height="800"
+         alt="The Pagecast palette open over a search results page: site commands (copy URL, open in a full tab) above page controls (links, inputs, buttons) with role chips on the right, and a footer showing the run, new tab, back and scope keys.">
+    <figcaption>Site commands, page controls and role chips, over whatever page you are on.</figcaption>
+  </figure>
+
+  <h2>How it works</h2>
+  <div class="flow">
+    <span>⌥. open</span><span class="arrow">→</span>
+    <span>⌨️ type</span><span class="arrow">→</span>
+    <span>🎯 filter</span><span class="arrow">→</span>
+    <span>↵ run</span>
+  </div>
+  <p>The palette indexes the current page in the browser: every element you can act on, named the way a screen reader names it, including ARIA widgets and rows inside open shadow roots that link-hint extensions tend to miss. Nothing is pre-scraped; it reads the page when you open it.</p>
+
+  <h2>What it searches</h2>
+  <ul class="facts">
+    <li><strong>Page</strong>: buttons, links, inputs and custom controls, with their accessible name, so <em>Clear</em> or <em>Search</em> is enough to find them.</li>
+    <li><strong>Tabs</strong>: open tabs, most recently used first.</li>
+    <li><strong>Site commands</strong>: extra actions for the site you are on — Proton Mail, Microsoft Teams and Azure DevOps ship in the box — plus two everywhere: copy the current URL, and open a preview as a full tab.</li>
+  </ul>
+  <p>Prefixes narrow the search: <code>&gt;</code> site commands, <code>#</code> page elements, <code>@</code> tabs. <kbd>⌘↵</kbd> opens a link in a new tab, <kbd>esc</kbd> goes back or closes and restores focus. While the palette is open it holds the keyboard, so site shortcuts do not fire underneath.</p>
+
+  <h2>Privacy</h2>
+  <p>No server, no account, no analytics, no remote code. Page content and the tab list are read in memory when the palette opens and are never stored or sent anywhere; the only request a command can make goes to the site you are already on, with your existing session. The full text is the <a href="https://nilleb.io/pagecast/privacy/">privacy policy</a>.</p>
+
+  <h2>Install</h2>
+  <ul class="facts">
+    <li><strong>Firefox and Zen</strong>: <a href="https://addons.mozilla.org/en-US/firefox/addon/98ecd77d880f4642899a/">install from addons.mozilla.org</a>.</li>
+    <li><strong>Chrome, Edge, Brave and Arc</strong>: the Chrome Web Store listing is in review.</li>
+  </ul>
+
+  <h2>Under the hood</h2>
+  <ul class="facts">
+    <li>Manifest V3 extension in TypeScript, bundled with esbuild; the palette UI lives in a closed shadow root so page styles cannot reach it.</li>
+    <li>Search runs on <a href="https://www.fusejs.io/">Fuse.js</a>, bundled — no CDN and no remote code, which also keeps store review short.</li>
+    <li>Site plugins are a URL matcher plus named selector hooks and a command factory, so a new site is a small file rather than a fork.</li>
+    <li>One codebase, two backgrounds: a service worker for Chromium, an event page for Firefox/Zen.</li>
+  </ul>
+
+  <p>More about the project on <a href="https://nilleb.io/pagecast/">nilleb.io/pagecast</a>.</p>
+
+  <footer>nillebco EURL · <a href="./">labs.nilleb.co</a></footer>
+</main>
+</body>
+</html>

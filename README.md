@@ -7,5 +7,6 @@ nillebco labs — static site on GitHub Pages.
 | Lab home | `index.html` |
 | Filament colours in stock | `filaments.html` — source of truth: brain vault `nillebco/Documentation/Prusa filament colors.html` (copy the `.grid` cards over, keep the back link) |
 | ESP32 voice assistant | `esp32-assistant.html` |
+| Pagecast (browser extension) | `pagecast.html` — screenshot in `assets/pagecast-palette.png`, copied from `~/dev/nillebco/pagecast/store/screens/01-palette-1280x800.png` |
 
 Shared styles: `assets/labs.css`. Push to `main` to publish. `labs.nilleb.com` redirects here (Cloudflare).

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scoot, forked — a palette for the accessibility tree · nillebco labs</title>
+<meta name="description" content="An experiment: forking Scoot, a BSD-licensed macOS cursor actuator, into a searchable command palette over the accessibility tree — the desktop counterpart of Pagecast.">
+<link rel="stylesheet" href="assets/labs.css">
+</head>
+<body>
+<main>
+  <p class="back"><a href="./">← nillebco labs</a></p>
+  <p class="eyebrow">macOS · experiment</p>
+  <h1>Scoot, forked</h1>
+  <p class="lead">Pagecast makes a web page searchable: press <kbd>⌥.</kbd> and type what you want. This is the same question asked of the whole desktop — <em>can the macOS accessibility tree carry a palette the way the DOM does?</em> — built on <a href="https://github.com/mjrusso/scoot">Scoot</a>, a BSD-3 keyboard cursor actuator.</p>
+
+  <div class="flow">
+    <span>⇧⌘J scan</span><span class="arrow">→</span>
+    <span>⌨️ type</span><span class="arrow">→</span>
+    <span>🎯 filter</span><span class="arrow">→</span>
+    <span>↵ press</span>
+  </div>
+  <p>The palette half does not exist yet. What exists is the matcher, the instruments used to measure the tree, and the bugs those instruments found. This page is a log, not a download.</p>
+
+  <h2>Why fork Scoot</h2>
+  <ul class="facts">
+    <li><strong>The alternatives are closed.</strong> The only palette-shaped tool for the Mac's own interface is Shortcat (free, still 0.x, last release July 2025); Homerow and Paletro are commercial. The two open-source projects — Vimac (GPL-3.0, dead since 2022) and Scoot (BSD-3, maintained) — both do hint labels and a grid, not search.</li>
+    <li><strong>Scoot already has the hard parts.</strong> A transparent overlay per display that joins all Spaces, correct across multiple monitors, click and drag synthesis, a menu bar agent, global hotkeys. Everything except the query.</li>
+    <li><strong>BSD-3 keeps the options open</strong>: the result can be closed, sold, or shipped on the App Store — which a GPL fork could not.</li>
+  </ul>
+
+  <h2>What is in the fork</h2>
+  <ul class="facts">
+    <li><strong>A fuzzy matcher</strong> (<code>Scoot/Fuzzy.swift</code>): whitespace-separated tokens that must all match, subsequence matching, and bonuses for a match at the start of the string, at a word boundary (separator or camelCase hump) and inside a consecutive run. It returns the matched ranges, so a list can highlight them. Pure Swift, no AppKit, 19 tests.</li>
+    <li><strong>A dump of what the tree exposes</strong>: every element of the focused window with role, title, description, value, identifier and frame, plus a count per role and how many elements carry no text at all. It answers “which text could a palette rank?” for a given app, before any palette UI exists.</li>
+    <li><strong>Its own Accessibility identity</strong>: bundle id <code>co.nillebco.scoot</code>, signed so the TCC grant survives rebuilds, living beside a Homebrew-installed Scoot.</li>
+  </ul>
+
+  <h2>What using it taught</h2>
+  <p>Four bugs, all found by measuring instead of reading:</p>
+  <ul class="facts">
+    <li><strong>Zen showed browser chrome, not the page.</strong> Firefox exposes the document as an <code>AXWebArea</code> that reports no frame of its own, and Scoot skipped the whole subtree of any node without a frame. Descending anyway: 17 elements → 82 on the same window, 38 of them links.</li>
+    <li><strong>Firefox keeps its tree shut until asked.</strong> With <code>AXEnhancedUserInterface</code> off, Zen exposes 6 nodes and 3 buttons with no title; with it on, 1674 nodes and 164 actionable ones — after about two seconds of waking up. The flag is now switched on at invoke, and the scan retries while the tree fills in.</li>
+    <li><strong>The labels outlived the overlay.</strong> They live in borderless windows that join every Space, and hiding them relied on <code>windowDidResignMain</code> — which does not fire when a menu bar agent is hidden. A stranded overlay survived a whole night; it is now ordered out explicitly.</li>
+    <li><strong>Two ways to “crash” without a crash.</strong> <kbd>⌘Q</kbd> reached the main menu and quit the agent instead of dismissing the overlay, and a leftover <code>pkill</code> in the test script SIGTERM-ed the running app on every test run. Both look identical on screen; the exit status in the log tells them apart.</li>
+  </ul>
+
+  <h2>What is next</h2>
+  <ul class="facts">
+    <li>Keep the <code>AXUIElement</code> handle in the model: today Scoot throws it away and clicks a rectangle, so nothing can be activated with <code>AXPress</code>.</li>
+    <li>A palette view — query field, ranked rows, arrow keys, Enter. The matcher is already written.</li>
+    <li>Menu bar traversal, which is how Shortcat and Raycast search an app's menu items for very little work.</li>
+    <li>Plugins keyed by bundle id: the piece Pagecast has and none of the Mac tools do.</li>
+  </ul>
+
+  <h2>Status, honestly</h2>
+  <p>An experiment, not a product: no release, no download, and element mode is still the upstream decision tree. What exists is committed and tested — 45 unit tests — on <a href="https://github.com/nillebco/scoot">GitHub</a>, forked from <a href="https://github.com/mjrusso/scoot">mjrusso/scoot</a> under BSD-3-Clause.</p>
+
+  <footer>nillebco EURL · <a href="./">labs.nilleb.co</a></footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WiFi plaque — nillebco labs</title>
+<meta name="description" content="Make a two-colour 3D-printable WiFi sign: a QR code guests can scan to join, plus the password printed in plain text. Runs entirely in your browser.">
+<link rel="stylesheet" href="assets/labs.css">
+<style>
+  :root { --stage-a: #e9e6df; --stage-b: #d6d2c8; --field: #ffffff; --ok: #1f8a4c; --ok-soft: #e1f3e8; --warn: #b4541a; --warn-soft: #fbe9dd; }
+  @media (prefers-color-scheme: dark) {
+    :root { --stage-a: #2a2a2d; --stage-b: #1c1c1e; --field: #1b1b1d; --ok: #5fd08f; --ok-soft: #173325; --warn: #ff9b5c; --warn-soft: #3a2416; }
+  }
+  main { max-width: 1120px; }
+  .tool { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 2rem; align-items: start; }
+  @media (max-width: 860px) { .tool { grid-template-columns: minmax(0, 1fr); } .stage-wrap { order: -1; } }
+
+  form { display: grid; gap: 1.1rem; }
+  fieldset { border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.1rem 1.1rem; margin: 0; background: var(--card); display: grid; gap: .8rem; min-width: 0; }
+  legend { font-weight: 700; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); padding: 0 .4rem; }
+  label.f { display: grid; gap: .3rem; font-size: .9rem; font-weight: 600; min-width: 0; }
+  label.f small { font-weight: 400; color: var(--muted); }
+  input[type=text], input[type=password], input[type=number], select {
+    font: inherit; font-weight: 400; color: var(--fg); background: var(--field);
+    border: 1px solid var(--border); border-radius: 9px; padding: .5rem .65rem; width: 100%; min-width: 0;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible, .swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+  .row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
+  @media (max-width: 480px) { .row3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .pw { display: flex; gap: .4rem; }
+  .pw button { flex: none; }
+  .checks { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; font-size: .9rem; }
+  .checks label { display: flex; gap: .4rem; align-items: center; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+  .seg label { padding: .45rem .8rem; font-size: .88rem; cursor: pointer; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label:has(input:checked) { background: var(--accent); color: #fff; }
+  .seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .hint { color: var(--muted); font-size: .85rem; margin: 0; }
+
+  .swatches { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); cursor: pointer; padding: 0; position: relative; }
+  .swatch[aria-pressed=true]::after { content: ""; position: absolute; inset: -5px; border: 2px solid var(--accent); border-radius: 50%; }
+  .colour-name { font-size: .85rem; color: var(--muted); font-weight: 400; }
+
+  .btn { font: inherit; font-weight: 600; border-radius: 10px; padding: .55rem .9rem; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--fg); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:hover { border-color: var(--accent); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .stage-wrap { position: sticky; top: 1rem; display: grid; gap: .9rem; }
+  .stage { position: relative; aspect-ratio: 5 / 4; border-radius: 18px; overflow: hidden; border: 1px solid var(--border);
+    background: radial-gradient(120% 90% at 50% 35%, var(--stage-a), var(--stage-b)); touch-action: none; cursor: grab; }
+  .stage:active { cursor: grabbing; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .stage .views { position: absolute; right: .6rem; bottom: .6rem; display: flex; gap: .3rem; }
+  .stage .views button { font: inherit; font-size: .78rem; padding: .25rem .6rem; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--fg); cursor: pointer; }
+  .stage .drag { position: absolute; left: .8rem; bottom: .7rem; font-size: .78rem; color: var(--muted); }
+  .stats { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .chip { border-radius: 999px; padding: .2rem .7rem; font-size: .8rem; font-weight: 600; background: var(--card); border: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+  .downloads { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .privacy { display: flex; gap: .6rem; align-items: flex-start; font-size: .88rem; color: var(--muted); background: var(--card); border: 1px dashed var(--border); border-radius: 12px; padding: .7rem .9rem; }
+  details summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+  details[open] summary { margin-bottom: .8rem; }
+  @media (prefers-reduced-motion: reduce) { .stage { cursor: default; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="back"><a href="./">← nillebco labs</a></p>
+  <p class="eyebrow">3D printing · two colours</p>
+  <h1>WiFi plaque</h1>
+  <p class="lead">A sign for the hallway: guests point their camera at the QR code and join, and anyone who prefers typing reads the password underneath. Fill in your network, pick two filaments, download the model.</p>
+
+  <div class="tool">
+    <form id="form" autocomplete="off">
+      <fieldset>
+        <legend>Network</legend>
+        <label class="f">Network name (SSID)
+          <input type="text" id="ssid" value="Our home" spellcheck="false">
+        </label>
+        <label class="f">Password
+          <span class="pw">
+            <input type="password" id="password" class="mono" value="correct-horse-battery" spellcheck="false" autocomplete="new-password">
+            <button type="button" class="btn" id="reveal" aria-pressed="false">Show</button>
+          </span>
+          <small id="example-note">Example values. Type your own.</small>
+        </label>
+        <div class="row2">
+          <label class="f">Security
+            <select id="security">
+              <option value="WPA" selected>WPA / WPA2 / WPA3</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">Open (no password)</option>
+            </select>
+          </label>
+          <div class="checks" style="align-self:end; padding-bottom:.5rem">
+            <label><input type="checkbox" id="hidden"> Hidden network</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>What's printed</legend>
+        <div class="row2">
+          <label class="f">Title <input type="text" id="title" value="WiFi"></label>
+          <label class="f">Label above password <input type="text" id="passLabel" value="password"></label>
+        </div>
+        <div class="checks">
+          <label><input type="checkbox" id="showSsid" checked> Network name</label>
+          <label><input type="checkbox" id="showPassword" checked> Password</label>
+          <label><input type="checkbox" id="hole" checked> Hanging hole</label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Colours</legend>
+        <div class="f" style="display:grid; gap:.4rem"><span style="font-weight:600; font-size:.9rem">Plate <span class="colour-name" id="baseName"></span></span><div class="swatches" id="baseSw"></div></div>
+        <div class="f" style="display:grid; gap:.4rem"><span style="font-weight:600; font-size:.9rem">Code and text <span class="colour-name" id="inkName"></span></span><div class="swatches" id="inkSw"></div></div>
+        <p class="hint">Swatches are the <a href="filaments.html">Prusament spools in stock</a>. Keep the code darker than the plate: many phone scanners cannot read light-on-dark QR codes.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Shape</legend>
+        <div hidden>
+          <span class="seg" role="radiogroup" aria-label="Colour layer">
+            <label><input type="radio" name="style" value="raised" checked> Raised</label>
+            <label><input type="radio" name="style" value="flush"> Flush inlay</label>
+          </span>
+        </div>
+        <p class="hint" id="styleHint"></p>
+        <div class="row3">
+          <label class="f">Width <small>mm</small><input type="number" id="width" value="90" min="40" max="250" step="1"></label>
+          <label class="f">QR code <small>mm</small><input type="number" id="qr" value="70" min="20" max="240" step="1"></label>
+          <label class="f">Corner radius <small>mm</small><input type="number" id="radius" value="5" min="0" max="30" step="0.5"></label>
+        </div>
+        <details>
+          <summary>Text and thickness</summary>
+          <div class="row3">
+            <label class="f">Title height <small>mm</small><input type="number" id="titleSize" value="9" min="3" max="30" step="0.5"></label>
+            <label class="f">Text height <small>mm</small><input type="number" id="text" value="5.5" min="3" max="20" step="0.5"></label>
+            <label class="f">Plate <small>mm</small><input type="number" id="base" value="2.4" min="1" max="10" step="0.2"></label>
+            <label class="f">Colour layer <small>mm</small><input type="number" id="ink" value="0.8" min="0.2" max="3" step="0.2"></label>
+          </div>
+        </details>
+      </fieldset>
+    </form>
+
+    <div class="stage-wrap">
+      <div class="stage" id="stage" aria-label="3D preview of the plaque. Drag to turn it.">
+        <span class="drag">Drag to turn</span>
+        <div class="views">
+          <button type="button" data-view="front">Front</button>
+          <button type="button" data-view="tilt">Tilted</button>
+        </div>
+      </div>
+      <div class="stats" id="stats" aria-live="polite"></div>
+      <div class="downloads">
+        <button type="button" class="btn primary" id="dl3mf">Download 3MF</button>
+        <button type="button" class="btn" id="dlCombined">STL for colour change</button>
+        <button type="button" class="btn" id="dlParts">STL per colour</button>
+      </div>
+      <p class="hint" id="dlHint"></p>
+      <div class="privacy"><span aria-hidden="true">🔒</span><span>The model is built in this tab. Your network name and password are not uploaded, logged or saved; reloading the page forgets them. They are, of course, in the files you download.</span></div>
+    </div>
+  </div>
+
+  <h2>Printing it</h2>
+  <ul class="facts">
+    <li><strong>3MF, multi-material</strong> (tool changer, MMU, AMS): one object with two parts, the plate on filament 1 and the code and text on filament 2. Open it in PrusaSlicer and check the two filament slots.</li>
+    <li><strong>One extruder</strong>: use “STL for colour change” and add a colour change at the height shown above (the <kbd>+</kbd> on PrusaSlicer's layer slider). Start with the plate colour.</li>
+    <li>Print face up on a smooth sheet. A 0.4 mm nozzle handles QR modules from about 1.2 mm; the chip above tells you the size of yours.</li>
+    <li>The scan check reads the code straight from the model geometry. Once printed, matte filament and good contrast scan best; a glossy black on white can glare under a ceiling light.</li>
+  </ul>
+
+  <footer>nillebco EURL · <a href="./">labs.nilleb.co</a> · Text set in DejaVu Sans (Bitstream Vera licence)</footer>
+</main>
+
+<script src="assets/vendor/opentype.min.js"></script>
+<script src="assets/vendor/earcut.min.js"></script>
+<script src="assets/vendor/qrcode.js"></script>
+<script src="assets/vendor/jsQR.js"></script>
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/wifi-plaque.js"></script>
+<script>
+(async () => {
+  const $ = (id) => document.getElementById(id);
+  const FILAMENTS = [
+    ["Signal White", "#F2F2F0"], ["Pearl White", "#EDEAE3"], ["Pristine White", "#E2E2E4"], ["Urban Grey", "#BBBBBB"], ["Galaxy Silver", "#A7A9AC"],
+    ["Pineapple Yellow", "#FFD701"], ["Prusa Orange", "#FF5801"], ["Lipstick Red", "#FA2639"], ["Ms. Pink", "#FD77BB"], ["Lime Green", "#9BD33C"],
+    ["Simply Green", "#04B803"], ["Azure Blue", "#03B8F8"], ["Royal Blue", "#4785DB"], ["Mystic Brown", "#5A3E2E"], ["Gentleman's Grey", "#5B5E62"],
+    ["Galaxy Black", "#26262B"], ["Jet Black", "#1A1A1C"],
+  ];
+  const colour = { base: FILAMENTS[0], ink: FILAMENTS[16] };
+
+  function swatches(el, which) {
+    el.innerHTML = "";
+    for (const f of FILAMENTS) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "swatch"; b.style.background = f[1]; b.title = f[0];
+      b.setAttribute("aria-label", f[0]); b.setAttribute("aria-pressed", String(colour[which] === f));
+      b.onclick = () => { colour[which] = f; swatches(el, which); paint(); update(); };
+      el.append(b);
+    }
+    $(which + "Name").textContent = "· " + colour[which][0];
+  }
+  swatches($("baseSw"), "base"); swatches($("inkSw"), "ink");
+
+  const [sans, mono] = await Promise.all(["DejaVuSans-Bold", "DejaVuSansMono-Bold"].map((f) =>
+    fetch(`assets/fonts/${f}.ttf`).then((r) => r.arrayBuffer()).then((b) => opentype.parse(b))));
+  const fonts = { sans, mono };
+
+  // ---- three.js preview ----
+  const stage = $("stage");
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  stage.prepend(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 1, 2000);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8478, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.75); sun.position.set(-80, 140, 200); scene.add(sun);
+  const pivot = new THREE.Group(); scene.add(pivot);
+  const mats = { base: new THREE.MeshStandardMaterial({ roughness: 0.65 }), ink: new THREE.MeshStandardMaterial({ roughness: 0.55 }) };
+  const meshes = {};
+  let rot = { x: -0.55, y: 0.35 }, model = null, size = 100;
+  const VIEWS = { front: { x: 0, y: 0 }, tilt: { x: -0.55, y: 0.35 } };
+
+  function paint() { mats.base.color.set(colour.base[1]); mats.ink.color.set(colour.ink[1]); render(); }
+  function resize() { const r = stage.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); render(); }
+  function render() {
+    pivot.rotation.set(rot.x, rot.y, 0);
+    const fit = size / 2 / Math.tan((camera.fov * Math.PI) / 360) / Math.min(1, camera.aspect) * 1.25;
+    camera.position.set(0, 0, fit); camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+  }
+  new ResizeObserver(resize).observe(stage);
+  let drag = null;
+  stage.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; drag = { x: e.clientX, y: e.clientY, r: { ...rot } }; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener("pointermove", (e) => { if (!drag) return; rot.y = drag.r.y + (e.clientX - drag.x) / 160; rot.x = Math.max(-1.5, Math.min(1.5, drag.r.x + (e.clientY - drag.y) / 160)); render(); });
+  stage.addEventListener("pointerup", () => (drag = null));
+  stage.querySelectorAll("[data-view]").forEach((b) => (b.onclick = () => { rot = { ...VIEWS[b.dataset.view] }; render(); }));
+
+  function setMeshes(m) {
+    for (const k of ["base", "ink"]) {
+      if (meshes[k]) { pivot.remove(meshes[k]); meshes[k].geometry.dispose(); }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(m[k].slice(), 3));
+      g.computeVertexNormals();
+      g.translate(-m.w / 2, -m.h / 2, 0);
+      meshes[k] = new THREE.Mesh(g, mats[k]); pivot.add(meshes[k]);
+    }
+    size = Math.max(m.w, m.h); render();
+  }
+
+  // ---- form ----
+  const num = (id) => parseFloat($(id).value) || 0;
+  const opts = () => ({
+    ssid: $("ssid").value, password: $("password").value, security: $("security").value, hidden: $("hidden").checked,
+    title: $("title").value, passLabel: $("passLabel").value, showSsid: $("showSsid").checked, showPassword: $("showPassword").checked, hole: $("hole").checked,
+    style: document.querySelector("input[name=style]:checked").value,
+    width: num("width"), qr: num("qr"), radius: num("radius"), titleSize: num("titleSize"), text: num("text"), base: num("base"), ink: num("ink"),
+  });
+  const lum = (hex) => { const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const chip = (text, cls = "") => `<span class="chip ${cls}">${text}</span>`;
+
+  let timer;
+  function update() {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const o = opts();
+      if (o.style === "flush" && o.ink >= o.base) o.ink = o.base / 2;
+      try { model = WifiPlaque.build(o, fonts); } catch (err) { $("stats").innerHTML = chip("Couldn't build: " + err.message, "warn"); return; }
+      setMeshes(model);
+      const decoded = WifiPlaque.scanCheck(model);
+      const lb = lum(colour.base[1]), li = lum(colour.ink[1]), ratio = (Math.max(lb, li) + 0.05) / (Math.min(lb, li) + 0.05);
+      const z = o.style === "flush" ? (o.base - o.ink) : o.base;
+      $("stats").innerHTML = [
+        decoded === model.payload ? chip("✓ Scan check passed", "ok") : chip("✗ Code does not scan", "warn"),
+        chip(`${model.w.toFixed(0)} × ${model.h.toFixed(0)} mm`),
+        chip(`${model.n}×${model.n} modules · ${model.mod.toFixed(2)} mm`, model.mod < 1.2 ? "warn" : ""),
+        li > lb ? chip("Code lighter than plate", "warn") : ratio < 3 ? chip("Low contrast", "warn") : "",
+        chip(o.style === "flush" ? "Flush: needs multi-material" : `Colour change at Z ${z.toFixed(2)} mm`),
+      ].join("");
+      $("dlCombined").disabled = o.style === "flush";
+      $("dlHint").textContent = o.style === "flush" ? "Flush inlay puts both colours in the same layers, so it needs a multi-material printer: use the 3MF." : "";
+      $("styleHint").textContent = o.style === "flush"
+        ? `Smooth top: the code and text are inlaid ${o.ink} mm into the plate. Multi-material printers only.`
+        : `The code and text stand ${o.ink} mm proud of the plate. Works with a single extruder and a colour change.`;
+    }, 120);
+  }
+
+  $("form").addEventListener("input", (e) => { if (e.target.id === "ssid" || e.target.id === "password") $("example-note").hidden = true; update(); });
+  $("form").addEventListener("submit", (e) => e.preventDefault());
+  $("reveal").onclick = () => { const p = $("password"), show = p.type === "password"; p.type = show ? "text" : "password"; $("reveal").textContent = show ? "Hide" : "Show"; $("reveal").setAttribute("aria-pressed", String(show)); };
+
+  const slug = () => "wifi-" + ($("ssid").value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "plaque");
+  function save(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+  $("dl3mf").onclick = () => model && save(WifiPlaque.threeMF(model, slug()), slug() + ".3mf");
+  $("dlCombined").onclick = () => { if (!model) return; const c = new Float32Array(model.base.length + model.ink.length); c.set(model.base); c.set(model.ink, model.base.length); save(WifiPlaque.stl(c), slug() + ".stl"); };
+  $("dlParts").onclick = () => { if (!model) return; save(WifiPlaque.stl(model.base), slug() + "-plate.stl"); setTimeout(() => save(WifiPlaque.stl(model.ink), slug() + "-code.stl"), 400); };
+
+  paint(); resize(); update();
+})();
+</script>
+</body>
+</html>

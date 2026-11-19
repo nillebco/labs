@@ -25,7 +25,7 @@
   <ul class="facts">
     <li><strong>One list, four groups</strong>, like Pagecast: <em>Quick actions</em> (copy the page address, as Markdown, or its title), <em>Window</em> (the focused window's buttons, links and fields), <em>Tabs</em> and <em>Menu</em> (every menu bar item). Empty query shows each group; typing ranks them together.</li>
     <li><strong>Scopes</strong> narrow the search: <code>&gt;</code> actions, <code>#</code> window, <code>@</code> tabs, <code>/</code> menu — or as words, <code>tab: azure pull</code>.</li>
-    <li><strong>Tabs by address, not just title.</strong> A tab called “Overview” whose URL holds <code>sfp-rag-dev</code> is found by typing <code>sfprag</code>. For Zen and Firefox the addresses come from the browser's own session store.</li>
+    <li><strong>Tabs by address, not just title.</strong> A tab called “Overview” whose URL holds <code>sfp-rag-dev</code> is found by typing <code>sfprag</code>. For Zen and Firefox the addresses come from the browser's own session store; Safari, Chrome, Brave and Edge are asked over AppleScript, which costs one Automation prompt per browser and about 170 ms, overlapped with the accessibility scan.</li>
     <li><strong>Presses, not clicks.</strong> Rows run <code>AXPress</code> on the element itself, so it works on controls hidden behind others and on system sheets — a Safari camera prompt included.</li>
     <li><strong>Opens over the window you are using</strong>, on its display, not wherever the mouse happens to be. Menu items show instantly; the window scan fills in behind them.</li>
     <li>Scoot's grid and hint-label modes are still there, now with a grid that resizes from 30 to 200 pt without crashing.</li>
@@ -53,8 +53,7 @@
 
   <h2>What is next</h2>
   <ul class="facts">
-    <li>Tab addresses for Safari and Chromium browsers.</li>
-    <li>A first-run screen that explains the Accessibility permission before asking for it.</li>
+        <li>A first-run screen that explains the Accessibility permission before asking for it.</li>
     <li>A signed, notarized download with automatic updates. Not the App Store: its sandbox forbids driving other apps' interfaces, which is the whole point.</li>
     <li>Commands keyed by app, the piece Pagecast has and none of the Mac tools do.</li>
   </ul>

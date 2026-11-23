@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Print failure monitor — nillebco labs</title>
+<meta name="description" content="A service that watches Prusa Connect camera pictures for failed prints and pauses the printer before it wastes a spool, built on Prusa's official MCP server.">
+<link rel="stylesheet" href="assets/labs.css">
+</head>
+<body>
+<main>
+  <p class="back"><a href="./">← nillebco labs</a></p>
+  <p class="eyebrow">Coming soon</p>
+  <h1>Print failure monitor</h1>
+  <p class="lead">A long print fails quietly: a part comes loose and the nozzle keeps laying plastic into the air for hours. This monitor looks at the printer's camera every minute, recognises spaghetti and blobs, warns you, and pauses the print if nobody reacts.</p>
+
+  <h2>The aim</h2>
+  <p>Prusa printers already send camera pictures to Prusa Connect, but nothing looks at them while you sleep. Bambu Lab printers ship with spaghetti detection; Prusa owners keep asking for it on the forum. The goal is a monitor any Prusa owner can switch on, without RTSP, a Raspberry Pi or OctoPrint: if your printer shows up in Prusa Connect with a camera, it can be watched.</p>
+
+  <h2>How it works</h2>
+  <div class="flow">
+    <span>📷 camera picture in Prusa Connect</span><span class="arrow">→</span>
+    <span>🔌 Prusa MCP</span><span class="arrow">→</span>
+    <span>🧠 failure detector</span><span class="arrow">→</span>
+    <span>🔔 alert</span><span class="arrow">→</span>
+    <span>⏸️ pause after 3 strikes</span>
+  </div>
+  <ul class="facts">
+    <li><strong>Access:</strong> <a href="https://www.prusa3d.com/p/prusa-mcp/">Prusa MCP</a>, the official service Prusa runs next to Connect. You sign in with your Prusa account and approve access; the monitor never sees your password.</li>
+    <li><strong>Pictures:</strong> the latest snapshot your camera uploaded to Connect (every 10 to 60 seconds). Pictures older than a few minutes are skipped rather than judged.</li>
+    <li><strong>Detection:</strong> the open-source <a href="https://github.com/TheSpaghettiDetective/obico-server">Obico</a> failure model, run locally on each picture. A few tens of milliseconds per picture on a laptop, no GPU needed.</li>
+    <li><strong>Escalation:</strong> the first detection sends an alert with the annotated picture. If detections keep coming for three checks in a row and nobody touched the printer, it pauses the print. Resuming is always your call.</li>
+    <li><strong>Also watched:</strong> progress that stops moving for 20 minutes during a print, and a camera that stops sending pictures.</li>
+  </ul>
+
+  <h2>Coming soon</h2>
+  <p>We're working on making this service available to every Prusa owner soon. If you'd like to hear when it opens, get in touch via <a href="https://www.nilleb.co">nilleb.co</a>.</p>
+
+  <footer>nillebco EURL · <a href="./">labs.nilleb.co</a></footer>
+</main>
+</body>
+</html>
